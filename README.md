@@ -26,22 +26,8 @@ The application is built using modern frontend technologies and features a compo
 
 ## Preview
 
-> Add screenshots of the application here.
+<img width="1917" height="1006" alt="image" src="https://github.com/user-attachments/assets/5f546b78-a5ca-40ac-a8ef-4dec5f415181" />
 
-```
-docs/
-    home.png
-    editor.png
-    preview.png
-```
-
-Example:
-
-```markdown
-![Home](docs/home.png)
-```
-
----
 
 ## Features
 
