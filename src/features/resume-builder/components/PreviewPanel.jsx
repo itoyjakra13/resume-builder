@@ -20,7 +20,7 @@ export const PreviewPanel = memo(function PreviewPanel() {
 
   const { resumeData, metadata, updateMetadata, setMetadata, addToast } = useResume();
   const [zoom, setZoom] = useState(1); // Scale multiplier
-  const [showControls, setShowControls] = useState(true);
+  const [showControls, setShowControls] = useState(false);
 
   const fontOptions = [
     { label: 'Clean Sans (Inter)', value: 'sans' },

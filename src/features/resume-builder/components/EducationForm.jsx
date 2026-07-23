@@ -4,7 +4,7 @@ import { Input } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
 import { validateDateRange } from '../../../utils/validation';
 
-export const EducationForm = memo(function EducationForm({ errors = {}, setErrors }) {
+export const EducationForm = memo(function EducationForm({ errors = {}, setErrors, onRequestDelete }) {
 
   const {
     resumeData,
@@ -14,6 +14,31 @@ export const EducationForm = memo(function EducationForm({ errors = {}, setError
     reorderEducation
   } = useResume();
   const { education = [] } = resumeData;
+
+  const handleDelete = (edu) => {
+    if (onRequestDelete) {
+      onRequestDelete({
+        id: edu.id,
+        title: 'Delete Education Entry?',
+        message: `Are you sure you want to delete "${edu.degree || edu.institution || 'this education entry'}"? This action cannot be undone.`,
+        onConfirm: () => {
+          deleteEducation(edu.id);
+          setErrors(prev => {
+            const next = { ...prev };
+            delete next[`edu-${edu.id}`];
+            return next;
+          });
+        }
+      });
+    } else {
+      deleteEducation(edu.id);
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next[`edu-${edu.id}`];
+        return next;
+      });
+    }
+  };
 
   const handleFieldChange = (id, field, value) => {
     updateEducation(id, { [field]: value });
@@ -94,14 +119,7 @@ export const EducationForm = memo(function EducationForm({ errors = {}, setError
                     variant="danger"
                     size="sm"
                     className="!py-1 px-2 text-xs"
-                    onClick={() => {
-                      deleteEducation(edu.id);
-                      setErrors(prev => {
-                        const next = { ...prev };
-                        delete next[`edu-${edu.id}`];
-                        return next;
-                      });
-                    }}
+                    onClick={() => handleDelete(edu)}
                     aria-label={`Delete education ${index + 1}`}
                     title="Delete Entry"
                   >

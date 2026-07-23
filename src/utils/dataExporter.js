@@ -59,22 +59,22 @@ export function importFromJson(file, onSuccess, onFailure) {
       
       // Verification Schema Checks
       if (!data || typeof data !== 'object') {
-        throw new Error('Invalid file format. Import must be a JSON object.');
+        throw new Error('Import failed. The selected file is not a valid JSON document.');
       }
       
-      if (!data.resumeData || !data.resumeData.personalInfo) {
-        throw new Error('Missing core resume data details inside the file.');
+      if (!data.resumeData || typeof data.resumeData !== 'object' || !data.resumeData.personalInfo) {
+        throw new Error('Import failed. The selected file is not a valid CV-Craft resume.');
       }
 
       onSuccess(data.resumeData, data.metadata || {});
     } catch (error) {
       console.error('Import failed:', error);
-      onFailure(error.message || 'Failed to parse JSON file. File may be corrupted or incorrectly formatted.');
+      onFailure(error.message || 'Import failed. The selected file is not a valid CV-Craft resume.');
     }
   };
 
   reader.onerror = () => {
-    onFailure('Failed to read the file from your disk.');
+    onFailure('Import failed. Unable to read the selected file from disk.');
   };
   
   reader.readAsText(file);

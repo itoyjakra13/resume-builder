@@ -37,10 +37,7 @@ const SUB_SIZE_MAP = {
   large: 'text-[11px]'
 };
 
-const sectionHeaderSizeMap = SECTION_HEADER_SIZE_MAP;
-const bodyBoldSizeMap = BODY_BOLD_SIZE_MAP;
-const bodySizeMap = BODY_SIZE_MAP;
-const subSizeMap = SUB_SIZE_MAP;
+
 
 export const ModernTemplate = memo(function ModernTemplate({ data = {}, metadata = {} }) {
   const { personalInfo = {}, experience = [], education = [], skills = [], projects = [], customSections = [] } = data;

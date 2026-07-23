@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useResume } from '../context/ResumeContext';
 import { Header } from './Header/Header';
+import { Footer } from './Footer/Footer';
+import { AboutModal } from './Modal/AboutModal';
+import { ConfirmModal } from './Modal/ConfirmModal';
 import { FormPanel } from '../features/resume-builder/components/FormPanel';
 import { PreviewPanel } from '../features/resume-builder/components/PreviewPanel';
 import { TemplateRenderer } from '../templates/TemplateRenderer';
@@ -19,13 +22,48 @@ const MARGIN_PADDING_MAP = {
   wide: '20mm 22mm'
 };
 
-
 export function ResumeBuilderApp() {
-
-  const { resumeData, metadata, toasts, addToast, removeToast } = useResume();
+  const { resumeData, metadata, toasts, addToast, removeToast, resetData } = useResume();
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState('edit'); // 'edit' | 'preview' (responsive controls)
+  const [activeSection, setActiveSection] = useState('personal'); // Active section for nav toolbar & scroll spy
   const [isExporting, setIsExporting] = useState(false);
+  const [exportProgressText, setExportProgressText] = useState('');
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState(null);
+
+  // Section selection handler
+  const handleSelectSection = (sectionId) => {
+    if (sectionId === 'preview') {
+      setActiveTab('preview');
+      setActiveSection('preview');
+      document.getElementById('preview-panel')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      setActiveTab('edit');
+      setActiveSection(sectionId);
+      setTimeout(() => {
+        const target = document.getElementById('editor-panel');
+        target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    }
+  };
+
+  const handleRequestDelete = (config) => {
+    setConfirmConfig(config);
+  };
+
+  const handleRequestReset = () => {
+    setConfirmConfig({
+      title: 'Reset Resume Data?',
+      message: 'Are you sure you want to clear all your inputs? This action will restore empty fields and cannot be undone.',
+      confirmLabel: 'Clear All Data',
+      variant: 'danger',
+      onConfirm: () => {
+        resetData();
+        setErrors({});
+      }
+    });
+  };
 
   const handleValidateAndPrint = () => {
     if (isExporting) return;
@@ -60,45 +98,74 @@ export function ResumeBuilderApp() {
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
-      addToast('Validation errors found. Please review the highlighted fields.', 'error', 4000);
-      // Switch view to edit mode on mobile so the user can see errors
+      addToast('Validation errors found. Please review highlighted fields.', 'error', 4000);
       setActiveTab('edit');
       return;
     }
 
-    // Clear errors and run printer
+    // Clear errors and run printer with multi-stage progress feedback
     setErrors({});
     setIsExporting(true);
-    addToast('Preparing PDF export...', 'info', 2000);
+    setExportProgressText('Preparing PDF...');
+    addToast('Preparing PDF...', 'info', 2000);
 
-    // Save current document title and temporarily set title to desired PDF filename
     const originalTitle = document.title;
     const rawName = personalInfo?.fullName?.trim() || '';
     const pdfFilename = rawName ? `${rawName.replace(/\s+/g, '_')}_Resume` : 'Resume';
 
     setTimeout(() => {
+      setExportProgressText('Rendering PDF...');
+    }, 250);
+
+    setTimeout(() => {
       try {
         document.title = pdfFilename;
         window.print();
-        addToast('Export initiated! Select "Save as PDF" in your print dialog.', 'success', 3000);
+        addToast('Resume exported successfully.', 'success', 3000);
       } catch (err) {
         console.error('Print failed:', err);
-        addToast('Failed to trigger PDF export. Please try again.', 'error', 4000);
+        addToast('Unable to complete action. Please try again.', 'error', 4000);
       } finally {
         document.title = originalTitle;
         setIsExporting(false);
+        setExportProgressText('');
       }
-    }, 250);
+    }, 600);
   };
 
   const totalErrorsCount = Object.keys(errors).length;
 
   return (
-    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
+    <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100 font-sans">
+      {/* Modals */}
+      <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      {confirmConfig && (
+        <ConfirmModal
+          isOpen={Boolean(confirmConfig)}
+          title={confirmConfig.title}
+          message={confirmConfig.message}
+          confirmLabel={confirmConfig.confirmLabel || 'Delete'}
+          variant={confirmConfig.variant || 'danger'}
+          onConfirm={() => {
+            if (confirmConfig.onConfirm) confirmConfig.onConfirm();
+            setConfirmConfig(null);
+          }}
+          onCancel={() => setConfirmConfig(null)}
+        />
+      )}
+
       {/* Screen UI Wrapper - Hidden on print */}
       <div className="no-print flex flex-col min-h-screen">
-        {/* Header */}
-        <Header onValidateAndPrint={handleValidateAndPrint} isExporting={isExporting} />
+        {/* Sticky Professional Application Header Navigation Bar */}
+        <Header
+          activeSection={activeSection}
+          onSelectSection={handleSelectSection}
+          onValidateAndPrint={handleValidateAndPrint}
+          isExporting={isExporting}
+          exportProgressText={exportProgressText}
+          onRequestReset={handleRequestReset}
+          onOpenAbout={() => setIsAboutOpen(true)}
+        />
 
         {/* Main Content Layout Grid */}
         <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-7xl mx-auto w-full p-4 md:p-6 gap-6">
@@ -108,21 +175,18 @@ export function ResumeBuilderApp() {
             id="editor-panel"
             aria-labelledby="tab-edit"
             hidden={activeTab !== 'edit' && window.innerWidth < 1024}
-            className={`lg:col-span-5 space-y-4 pb-24 lg:pb-6 ${
+            className={`lg:col-span-5 space-y-4 pb-24 lg:pb-6 scroll-mt-24 ${
               activeTab === 'edit' ? 'block' : 'hidden lg:block'
             }`}
           >
             <div className="max-w-2xl mx-auto space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-base font-bold text-slate-200">Resume Editor</h2>
-                {totalErrorsCount > 0 && (
-                  <span className="bg-red-950/50 text-red-400 border border-red-900/50 px-2 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>
-                    {totalErrorsCount} issue{totalErrorsCount > 1 ? 's' : ''} to fix
-                  </span>
-                )}
-              </div>
-              <FormPanel errors={errors} setErrors={setErrors} />
+              <FormPanel
+                errors={errors}
+                setErrors={setErrors}
+                onRequestDelete={handleRequestDelete}
+                activeSection={activeSection}
+                onSelectSection={handleSelectSection}
+              />
             </div>
           </div>
 
@@ -132,7 +196,7 @@ export function ResumeBuilderApp() {
             id="preview-panel"
             aria-labelledby="tab-preview"
             hidden={activeTab !== 'preview' && window.innerWidth < 1024}
-            className={`lg:col-span-7 ${
+            className={`lg:col-span-7 scroll-mt-24 ${
               activeTab === 'preview' ? 'block' : 'hidden lg:block'
             }`}
           >
@@ -148,8 +212,8 @@ export function ResumeBuilderApp() {
             role="tab"
             aria-selected={activeTab === 'edit'}
             aria-controls="editor-panel"
-            onClick={() => setActiveTab('edit')}
-            className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            onClick={() => handleSelectSection('personal')}
+            className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'edit'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/10'
                 : 'bg-slate-900 text-slate-400 hover:text-slate-200'
@@ -171,8 +235,8 @@ export function ResumeBuilderApp() {
             role="tab"
             aria-selected={activeTab === 'preview'}
             aria-controls="preview-panel"
-            onClick={() => setActiveTab('preview')}
-            className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 ${
+            onClick={() => handleSelectSection('preview')}
+            className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer ${
               activeTab === 'preview'
                 ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/10'
                 : 'bg-slate-900 text-slate-400 hover:text-slate-200'
@@ -185,10 +249,13 @@ export function ResumeBuilderApp() {
             Live Preview
           </button>
         </nav>
+
+        {/* Application Footer */}
+        <Footer onOpenAbout={() => setIsAboutOpen(true)} />
       </div>
 
       {/* Toast notifications */}
-      <div className="fixed bottom-20 lg:bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm w-full no-print">
+      <div className="fixed bottom-20 lg:bottom-6 right-6 z-50 flex flex-col gap-2 max-w-sm w-full no-print" role="region" aria-label="Notifications">
         {toasts.map((toast) => (
           <div
             key={toast.id}
@@ -204,7 +271,7 @@ export function ResumeBuilderApp() {
             <span>{toast.message}</span>
             <button
               onClick={() => removeToast(toast.id)}
-              className="text-slate-400 hover:text-slate-200 transition-colors ml-2 font-bold"
+              className="text-slate-400 hover:text-slate-200 transition-colors ml-2 font-bold focus:outline-none focus-visible:ring-1 focus-visible:ring-slate-500 rounded p-0.5"
               aria-label="Close notification"
             >
               &times;
@@ -225,5 +292,3 @@ export function ResumeBuilderApp() {
     </div>
   );
 }
-
-

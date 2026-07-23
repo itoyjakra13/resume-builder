@@ -4,7 +4,7 @@ import { Input, Textarea } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
 import { validateDateRange } from '../../../utils/validation';
 
-export const ExperienceForm = memo(function ExperienceForm({ errors = {}, setErrors }) {
+export const ExperienceForm = memo(function ExperienceForm({ errors = {}, setErrors, onRequestDelete }) {
 
   const {
     resumeData,
@@ -14,6 +14,31 @@ export const ExperienceForm = memo(function ExperienceForm({ errors = {}, setErr
     reorderExperience
   } = useResume();
   const { experience = [] } = resumeData;
+
+  const handleDelete = (exp) => {
+    if (onRequestDelete) {
+      onRequestDelete({
+        id: exp.id,
+        title: 'Delete Work Experience?',
+        message: `Are you sure you want to delete "${exp.role || exp.company || 'this experience entry'}"? This action cannot be undone.`,
+        onConfirm: () => {
+          deleteExperience(exp.id);
+          setErrors(prev => {
+            const next = { ...prev };
+            delete next[`exp-${exp.id}`];
+            return next;
+          });
+        }
+      });
+    } else {
+      deleteExperience(exp.id);
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next[`exp-${exp.id}`];
+        return next;
+      });
+    }
+  };
 
   const handleFieldChange = (id, field, value) => {
     updateExperience(id, { [field]: value });
@@ -105,14 +130,7 @@ export const ExperienceForm = memo(function ExperienceForm({ errors = {}, setErr
                     variant="danger"
                     size="sm"
                     className="!py-1 px-2 text-xs"
-                    onClick={() => {
-                      deleteExperience(exp.id);
-                      setErrors(prev => {
-                        const next = { ...prev };
-                        delete next[`exp-${exp.id}`];
-                        return next;
-                      });
-                    }}
+                    onClick={() => handleDelete(exp)}
                     aria-label={`Delete position ${index + 1}`}
                     title="Delete Entry"
                   >

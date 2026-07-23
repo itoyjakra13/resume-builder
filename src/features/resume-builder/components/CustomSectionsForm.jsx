@@ -3,7 +3,7 @@ import { useResume } from '../../../context/ResumeContext';
 import { Input, Textarea } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
 
-export const CustomSectionsForm = memo(function CustomSectionsForm() {
+export const CustomSectionsForm = memo(function CustomSectionsForm({ onRequestDelete }) {
 
   const {
     resumeData,
@@ -17,6 +17,21 @@ export const CustomSectionsForm = memo(function CustomSectionsForm() {
   } = useResume();
   const { customSections = [] } = resumeData;
   const [newSectionTitle, setNewSectionTitle] = useState('');
+
+  const handleDeleteSection = (section) => {
+    if (onRequestDelete) {
+      onRequestDelete({
+        id: section.id,
+        title: 'Delete Custom Section?',
+        message: `Are you sure you want to delete section "${section.sectionTitle}" and all its entries? This action cannot be undone.`,
+        onConfirm: () => {
+          deleteCustomSection(section.id);
+        }
+      });
+    } else {
+      deleteCustomSection(section.id);
+    }
+  };
 
   const handleCreateSection = (e) => {
     e.preventDefault();
@@ -72,7 +87,7 @@ export const CustomSectionsForm = memo(function CustomSectionsForm() {
                   <Button
                     variant="danger"
                     size="sm"
-                    onClick={() => deleteCustomSection(section.id)}
+                    onClick={() => handleDeleteSection(section)}
                     className="text-xs"
                   >
                     Remove Section

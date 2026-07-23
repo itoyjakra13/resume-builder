@@ -4,7 +4,7 @@ import { Input, Textarea } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
 import { validateUrl } from '../../../utils/validation';
 
-export const ProjectsForm = memo(function ProjectsForm({ errors = {}, setErrors }) {
+export const ProjectsForm = memo(function ProjectsForm({ errors = {}, setErrors, onRequestDelete }) {
 
   const {
     resumeData,
@@ -14,6 +14,31 @@ export const ProjectsForm = memo(function ProjectsForm({ errors = {}, setErrors 
     reorderProject
   } = useResume();
   const { projects = [] } = resumeData;
+
+  const handleDelete = (proj) => {
+    if (onRequestDelete) {
+      onRequestDelete({
+        id: proj.id,
+        title: 'Delete Project?',
+        message: `Are you sure you want to delete "${proj.name || 'this project'}"? This action cannot be undone.`,
+        onConfirm: () => {
+          deleteProject(proj.id);
+          setErrors(prev => {
+            const next = { ...prev };
+            delete next[`proj-${proj.id}`];
+            return next;
+          });
+        }
+      });
+    } else {
+      deleteProject(proj.id);
+      setErrors(prev => {
+        const next = { ...prev };
+        delete next[`proj-${proj.id}`];
+        return next;
+      });
+    }
+  };
 
   const handleFieldChange = (id, field, value) => {
     if (field === 'technologies') {
@@ -96,14 +121,7 @@ export const ProjectsForm = memo(function ProjectsForm({ errors = {}, setErrors 
                     variant="danger"
                     size="sm"
                     className="!py-1 px-2 text-xs"
-                    onClick={() => {
-                      deleteProject(proj.id);
-                      setErrors(prev => {
-                        const next = { ...prev };
-                        delete next[`proj-${proj.id}`];
-                        return next;
-                      });
-                    }}
+                    onClick={() => handleDelete(proj)}
                     aria-label={`Delete project ${index + 1}`}
                     title="Delete Entry"
                   >

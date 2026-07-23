@@ -1,6 +1,17 @@
-import React, { useRef, memo } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { useResume } from '../../context/ResumeContext';
 import { Button } from '../Button/Button';
+
+const NAV_SECTIONS = [
+  { id: 'personal', name: 'Personal' },
+  { id: 'experience', name: 'Experience' },
+  { id: 'education', name: 'Education' },
+  { id: 'skills', name: 'Skills' },
+  { id: 'projects', name: 'Projects' },
+  { id: 'custom', name: 'Certifications' },
+  { id: 'ats', name: 'ATS' },
+  { id: 'preview', name: 'Preview' },
+];
 
 const TEMPLATE_OPTIONS = [
   { id: 'modern', name: 'Modern Split' },
@@ -11,31 +22,68 @@ const TEMPLATE_OPTIONS = [
   { id: 'creativeHeader', name: 'Creative Header' }
 ];
 
-export const Header = memo(function Header({ onValidateAndPrint, isExporting = false }) {
+export const Header = memo(function Header({
+  activeSection = 'personal',
+  onSelectSection,
+  onValidateAndPrint,
+  isExporting = false,
+  exportProgressText = '',
+  onRequestReset,
+  onOpenAbout,
+}) {
   const {
     metadata,
     updateMetadata,
     loadSampleData,
-    resetData,
     saveStatus,
     handleExportJson,
     handleImportJsonFile,
   } = useResume();
 
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isOverflowOpen, setIsOverflowOpen] = useState(false);
   const fileInputRef = useRef(null);
+  const overflowRef = useRef(null);
 
+  // Close overflow menu on outside click or Escape key
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (overflowRef.current && !overflowRef.current.contains(e.target)) {
+        setIsOverflowOpen(false);
+      }
+    };
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsOverflowOpen(false);
+        setIsMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     if (file) {
       handleImportJsonFile(file);
-      // Reset input value so re-importing same file triggers event
       e.target.value = '';
     }
   };
 
+  const handleSectionClick = (sectionId) => {
+    setIsMobileMenuOpen(false);
+    if (onSelectSection) {
+      onSelectSection(sectionId);
+    }
+  };
+
   return (
-    <header className="w-full bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 px-4 md:px-6 py-3 flex flex-col md:flex-row justify-between items-center gap-3.5 no-print sticky top-0 z-50">
+    <header className="sticky top-0 z-50 w-full bg-slate-950/95 backdrop-blur-md border-b border-slate-800/80 no-print transition-colors duration-150">
       {/* Hidden File Input for JSON Import */}
       <input
         ref={fileInputRef}
@@ -46,141 +94,234 @@ export const Header = memo(function Header({ onValidateAndPrint, isExporting = f
         aria-label="Upload JSON file"
       />
 
-      {/* Brand Logo, Title & Save Status Indicator */}
-      <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-start">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
-            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-base font-extrabold text-slate-100 flex items-center gap-2 leading-none">
-              CV-Craft
-              <span className="text-[9px] bg-indigo-950/80 text-indigo-400 border border-indigo-900/60 px-1.5 py-0.5 rounded-full font-semibold uppercase">
-                v1.0
-              </span>
-            </h1>
-            <span className="text-[10px] text-slate-500 font-medium hidden sm:inline-block">Client-Side Resume Builder</span>
-          </div>
-        </div>
-
-        {/* LocalStorage Auto-Save Status Badge */}
-        <div
-          className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-semibold text-slate-400 select-none"
-          title={saveStatus === 'saving' ? 'Persisting changes to LocalStorage...' : 'All changes saved locally in your browser'}
-        >
-          <span className={`w-2 h-2 rounded-full transition-colors duration-200 ${
-            saveStatus === 'saving' ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'
-          }`} />
-          <span>{saveStatus === 'saving' ? 'Saving...' : 'Saved locally'}</span>
-        </div>
-      </div>
-
-      {/* Template selector tabs */}
-      <div className="flex bg-slate-900/90 border border-slate-800/80 p-1 rounded-xl gap-0.5 max-w-full overflow-x-auto tabs-scroll" role="radiogroup" aria-label="Resume template selection">
-        {TEMPLATE_OPTIONS.map((opt) => (
+      <div className="w-full px-4 md:px-6 h-14 flex items-center justify-between gap-4">
+        {/* Left: Brand Logo & Mobile Toggle (Pinned Top-Left) */}
+        <div className="flex items-center gap-3 shrink-0">
+          {/* Mobile Hamburger Toggle Button */}
           <button
-            key={opt.id}
             type="button"
-            role="radio"
-            aria-checked={metadata.templateId === opt.id}
-            onClick={() => updateMetadata('templateId', opt.id)}
-            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold tracking-wide transition-all duration-150 whitespace-nowrap cursor-pointer ${
-              metadata.templateId === opt.id
-                ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/20'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
-            }`}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-100 hover:bg-slate-900 border border-slate-800/80 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-nav-menu"
+            aria-label="Toggle navigation menu"
           >
-            {opt.name}
+            {isMobileMenuOpen ? (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
           </button>
-        ))}
-      </div>
 
-      {/* Actions Toolbar */}
-      <div className="flex items-center gap-2 flex-wrap justify-center w-full md:w-auto">
-        {/* Load Mock */}
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={loadSampleData}
-          title="Pre-populate with sample developer data"
-          className="text-xs"
-        >
-          Load Mock
-        </Button>
-
-        {/* JSON Export */}
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={handleExportJson}
-          title="Export resume data as JSON backup file"
-          className="text-xs gap-1"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Export JSON
-        </Button>
-
-        {/* JSON Import */}
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => fileInputRef.current?.click()}
-          title="Import resume from JSON backup file"
-          className="text-xs gap-1"
-        >
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-          </svg>
-          Import JSON
-        </Button>
-
-        {/* Reset / Clear */}
-        <Button
-          variant="danger"
-          size="sm"
-          onClick={() => {
-            if (window.confirm('Are you sure you want to clear all your inputs? This action will reset your resume.')) {
-              resetData();
-            }
-          }}
-          className="text-xs"
-          title="Clear all fields"
-        >
-          Clear
-        </Button>
-
-        {/* Download PDF Trigger */}
-        <Button
-          variant="primary"
-          size="sm"
-          onClick={onValidateAndPrint}
-          disabled={isExporting}
-          className="gap-1.5 shadow-indigo-600/10 font-bold text-xs"
-        >
-          {isExporting ? (
-            <>
-              <svg className="w-4 h-4 animate-spin text-white" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              Exporting...
-            </>
-          ) : (
-            <>
+          {/* Brand Logo & Name */}
+          <div className="flex items-center gap-2.5 cursor-pointer select-none" onClick={() => handleSectionClick('personal')}>
+            <div className="w-7 h-7 rounded-lg bg-indigo-600 flex items-center justify-center text-white">
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
-              Export PDF
-            </>
-          )}
-        </Button>
+            </div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-sm font-bold text-slate-100 tracking-tight">CV-Craft</span>
+              <span className="text-[10px] text-slate-500 font-mono">v1.0.0</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Center: Desktop Application Section Links (Centered) */}
+        <div className="hidden lg:flex items-center justify-center flex-1 max-w-xl">
+          <nav className="flex items-center gap-0.5 bg-slate-900/80 border border-slate-800/80 p-1 rounded-lg w-full justify-center" aria-label="Editor sections">
+            {NAV_SECTIONS.map((sec) => {
+              const isActive = activeSection === sec.id;
+              return (
+                <button
+                  key={sec.id}
+                  type="button"
+                  onClick={() => handleSectionClick(sec.id)}
+                  className={`px-3 py-1 rounded-md text-xs font-medium transition-colors duration-150 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                    isActive
+                      ? 'bg-indigo-600 text-white font-semibold'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                  }`}
+                  aria-current={isActive ? 'page' : undefined}
+                >
+                  {sec.name}
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Right: Save Status, Primary Export PDF & Overflow Menu (Pinned Top-Right) */}
+        <div className="flex items-center gap-2 shrink-0">
+          {/* LocalStorage Auto-Save Status Badge */}
+          <div
+            className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-medium text-slate-400 select-none transition-all duration-150"
+            title={saveStatus === 'saving' ? 'Persisting changes to LocalStorage...' : 'All changes saved locally in your browser'}
+            role="status"
+            aria-live="polite"
+          >
+            <span className={`w-1.5 h-1.5 rounded-full transition-colors duration-150 ${
+              saveStatus === 'saving' ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'
+            }`} />
+            <span className="hidden md:inline">{saveStatus === 'saving' ? 'Saving...' : 'Saved locally'}</span>
+          </div>
+
+          {/* Download PDF Primary Action */}
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={onValidateAndPrint}
+            disabled={isExporting}
+            isLoading={isExporting}
+            className="font-medium text-xs gap-1.5"
+          >
+            {isExporting ? (
+              <span>{exportProgressText || 'Exporting...'}</span>
+            ) : (
+              <>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Export PDF</span>
+              </>
+            )}
+          </Button>
+
+          {/* Secondary Actions Overflow Menu */}
+          <div className="relative" ref={overflowRef}>
+            <button
+              type="button"
+              onClick={() => setIsOverflowOpen(!isOverflowOpen)}
+              className="p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 hover:text-slate-100 hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 cursor-pointer"
+              aria-label="More options"
+              aria-expanded={isOverflowOpen}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </button>
+
+            {/* Overflow Dropdown Popup */}
+            {isOverflowOpen && (
+              <div className="absolute right-0 mt-1.5 w-52 bg-slate-900 border border-slate-800 rounded-xl p-1.5 shadow-xl space-y-1 z-50 text-xs">
+                {/* Template Selector Submenu */}
+                <div className="px-2 py-1 space-y-1">
+                  <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider block">Template</span>
+                  <div className="grid grid-cols-2 gap-1">
+                    {TEMPLATE_OPTIONS.map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          updateMetadata('templateId', opt.id);
+                          setIsOverflowOpen(false);
+                        }}
+                        className={`px-2 py-1 rounded text-[11px] text-left truncate font-medium transition-colors ${
+                          metadata.templateId === opt.id
+                            ? 'bg-indigo-600 text-white font-semibold'
+                            : 'text-slate-300 hover:bg-slate-800'
+                        }`}
+                      >
+                        {opt.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-800 my-1" />
+
+                {/* Secondary Actions */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    loadSampleData();
+                    setIsOverflowOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-md text-left text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-between transition-colors"
+                >
+                  <span>Load sample data</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleExportJson();
+                    setIsOverflowOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-md text-left text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-between transition-colors"
+                >
+                  <span>Export JSON backup</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    fileInputRef.current?.click();
+                    setIsOverflowOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-md text-left text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-between transition-colors"
+                >
+                  <span>Import JSON backup</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onOpenAbout();
+                    setIsOverflowOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-md text-left text-slate-300 hover:text-white hover:bg-slate-800 flex items-center justify-between transition-colors"
+                >
+                  <span>About CV-Craft</span>
+                </button>
+
+                <div className="border-t border-slate-800 my-1" />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onRequestReset();
+                    setIsOverflowOpen(false);
+                  }}
+                  className="w-full px-2.5 py-1.5 rounded-md text-left text-red-400 hover:bg-red-950/40 flex items-center justify-between transition-colors font-medium"
+                >
+                  <span>Clear data</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
+
+      {/* Mobile Collapsible Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div id="mobile-nav-menu" className="lg:hidden border-t border-slate-800 bg-slate-950 p-3 space-y-1 text-xs">
+          <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider px-2 block mb-1">Sections</span>
+          <div className="grid grid-cols-2 gap-1">
+            {NAV_SECTIONS.map((sec) => {
+              const isActive = activeSection === sec.id;
+              return (
+                <button
+                  key={sec.id}
+                  type="button"
+                  onClick={() => handleSectionClick(sec.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-colors flex items-center justify-between ${
+                    isActive
+                      ? 'bg-indigo-600 text-white font-semibold'
+                      : 'bg-slate-900 text-slate-300 hover:bg-slate-800'
+                  }`}
+                >
+                  <span>{sec.name}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </header>
   );
 });
-
-

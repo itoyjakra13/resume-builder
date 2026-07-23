@@ -24,11 +24,7 @@ const BODY_SIZE_MAP = {
   large: 'text-sm'
 };
 
-const BODY_BOLD_SIZE_MAP = {
-  small: 'text-xs',
-  medium: 'text-sm',
-  large: 'text-base'
-};
+
 
 const SUB_SIZE_MAP = {
   small: 'text-[9px]',
@@ -37,7 +33,6 @@ const SUB_SIZE_MAP = {
 };
 
 const sectionHeaderSizeMap = SECTION_HEADER_SIZE_MAP;
-const bodyBoldSizeMap = BODY_BOLD_SIZE_MAP;
 const bodySizeMap = BODY_SIZE_MAP;
 const subSizeMap = SUB_SIZE_MAP;
 

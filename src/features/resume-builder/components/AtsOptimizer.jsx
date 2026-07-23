@@ -118,18 +118,42 @@ export const AtsOptimizer = memo(function AtsOptimizer() {
       });
     }
 
+    const strengths = [];
+    const weaknesses = [];
+
+    if (personalInfo.fullName?.trim()) strengths.push('Full Name provided for recruiter identification.');
+    if (personalInfo.email?.trim()) strengths.push('Valid email address included.');
+    if (experience.length >= 2) strengths.push(`Strong career progression shown with ${experience.length} work entries.`);
+    if (skills.length >= 6) strengths.push(`Diverse technical skills matrix (${skills.length} skills listed).`);
+    if (foundVerbs.length >= 3) strengths.push(`Strong action verbs present (${foundVerbs.join(', ')}).`);
+
+    const hasMetrics = experience.some(exp => hasMeasurableAchievements(exp.description)) || projects.some(p => hasMeasurableAchievements(p.description));
+    if (hasMetrics) {
+      strengths.push('Quantifiable metrics/measurable achievements detected.');
+    } else {
+      weaknesses.push('Missing measurable achievements (e.g. %, $, numeric outcomes).');
+    }
+
+    if (!personalInfo.fullName?.trim()) weaknesses.push('Missing full name.');
+    if (!personalInfo.email?.trim()) weaknesses.push('Missing contact email.');
+    if (experience.length === 0) weaknesses.push('No work experience entries listed.');
+    if (skills.length < 6) weaknesses.push('Fewer than 6 skills listed.');
+    if (foundVerbs.length < 3) weaknesses.push('Fewer than 3 action verbs detected.');
+
     return {
       score: Math.round(score),
       suggestions,
+      strengths,
+      weaknesses,
       foundVerbs,
       missingVerbs,
-      hasMetrics: experience.some(exp => hasMeasurableAchievements(exp.description)) || projects.some(p => hasMeasurableAchievements(p.description))
+      hasMetrics
     };
   }, [resumeData]);
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    addToast(`Copied action verb "${text}" to clipboard!`, 'info', 2000);
+    addToast(`Copied "${text}" to clipboard.`, 'info', 2000);
   };
 
   const getScoreColorClass = (score) => {
@@ -157,7 +181,7 @@ export const AtsOptimizer = memo(function AtsOptimizer() {
               cx="48"
               cy="48"
               r="40"
-              className="transition-all duration-500 ease-out"
+              className="transition-all duration-300 ease-out"
               strokeWidth="8"
               fill="transparent"
               strokeDasharray={251.2}
@@ -168,28 +192,28 @@ export const AtsOptimizer = memo(function AtsOptimizer() {
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center font-bold text-xl">
             <span>{atsReport.score}</span>
-            <span className="text-[9px] text-slate-400 font-semibold uppercase tracking-wider">ATS Score</span>
+            <span className="text-[9px] text-slate-400 font-medium uppercase tracking-wider">ATS Score</span>
           </div>
         </div>
 
         {/* Text overview */}
         <div className="flex-1 space-y-1 text-center md:text-left">
           <h5 className="font-bold text-slate-100 flex items-center justify-center md:justify-start gap-2">
-            ATS Compatibility Score
-            <span className="text-[10px] px-2 py-0.5 rounded-full font-bold uppercase bg-slate-900 border border-slate-800 text-slate-300">
+            ATS Score Breakdown
+            <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold uppercase bg-slate-900 border border-slate-800 text-slate-300">
               {atsReport.score >= 80 ? 'ATS Ready' : atsReport.score >= 50 ? 'Needs Polish' : 'Incomplete'}
             </span>
           </h5>
           <p className="text-xs text-slate-300 leading-relaxed">
             {atsReport.score >= 80
-              ? 'Outstanding! Your resume structure, keyword density, and quantifiable impact metrics meet ATS standards.'
+              ? 'Resume structure, keyword density, and quantifiable impact metrics meet ATS scanner criteria.'
               : atsReport.score >= 50
-              ? 'Good foundation. Follow the actionable recommendations below to boost your rank for recruiter scanners.'
-              : 'Complete key sections, add action verbs, and include quantifiable achievements to pass automated ATS filters.'}
+              ? 'Foundation complete. Follow the recommendations below to improve ATS keyword density.'
+              : 'Complete key sections, action verbs, and quantifiable metrics to improve ATS compatibility.'}
           </p>
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs font-semibold text-slate-400 pt-1">
-            <span>Verbs Found: <strong className="text-slate-200">{atsReport.foundVerbs.length}</strong></span>
-            <span>Metrics Included: <strong className={atsReport.hasMetrics ? 'text-emerald-400' : 'text-amber-400'}>{atsReport.hasMetrics ? 'Yes ✓' : 'No ✗'}</strong></span>
+          <div className="flex flex-wrap items-center justify-center md:justify-start gap-3 text-xs font-medium text-slate-400 pt-1">
+            <span>Verbs detected: <strong className="text-slate-200">{atsReport.foundVerbs.length}</strong></span>
+            <span>Metrics included: <strong className={atsReport.hasMetrics ? 'text-emerald-400' : 'text-amber-400'}>{atsReport.hasMetrics ? 'Yes' : 'No'}</strong></span>
           </div>
         </div>
       </div>
@@ -240,6 +264,53 @@ export const AtsOptimizer = memo(function AtsOptimizer() {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Strengths & Weaknesses Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Strengths */}
+        <div className="p-4 bg-emerald-950/20 border border-emerald-900/40 rounded-xl space-y-2">
+          <h6 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Strengths ({atsReport.strengths.length})
+          </h6>
+          {atsReport.strengths.length === 0 ? (
+            <span className="text-xs text-slate-500 italic block">No strengths registered yet. Fill in details to build profile score.</span>
+          ) : (
+            <ul className="space-y-1.5 text-xs text-slate-300">
+              {atsReport.strengths.map((str, i) => (
+                <li key={i} className="flex items-start gap-1.5">
+                  <span className="text-emerald-400 font-bold">•</span>
+                  <span>{str}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Weaknesses */}
+        <div className="p-4 bg-amber-950/20 border border-amber-900/40 rounded-xl space-y-2">
+          <h6 className="text-xs font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            Areas for Growth ({atsReport.weaknesses.length})
+          </h6>
+          {atsReport.weaknesses.length === 0 ? (
+            <span className="text-xs text-emerald-400 font-medium block">Zero critical weaknesses detected! Excellent work.</span>
+          ) : (
+            <ul className="space-y-1.5 text-xs text-slate-300">
+              {atsReport.weaknesses.map((weak, i) => (
+                <li key={i} className="flex items-start gap-1.5">
+                  <span className="text-amber-400 font-bold">•</span>
+                  <span>{weak}</span>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
