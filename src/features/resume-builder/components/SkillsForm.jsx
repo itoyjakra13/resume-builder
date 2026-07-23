@@ -1,25 +1,36 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useResume } from '../../../context/ResumeContext';
 import { Input, Select } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
+import { isDuplicateSkill } from '../../../utils/validation';
 
-export function SkillsForm() {
+const SKILL_LEVELS = [
+  { label: 'Beginner (1/5)', value: 1 },
+  { label: 'Novice (2/5)', value: 2 },
+  { label: 'Intermediate (3/5)', value: 3 },
+  { label: 'Advanced (4/5)', value: 4 },
+  { label: 'Expert (5/5)', value: 5 }
+];
+
+export const SkillsForm = memo(function SkillsForm() {
   const {
     resumeData,
     addSkill,
     updateSkill,
     deleteSkill,
-    reorderSkill
+    reorderSkill,
+    addToast
   } = useResume();
   const { skills = [] } = resumeData;
 
-  const levels = [
-    { label: 'Beginner (1/5)', value: 1 },
-    { label: 'Novice (2/5)', value: 2 },
-    { label: 'Intermediate (3/5)', value: 3 },
-    { label: 'Advanced (4/5)', value: 4 },
-    { label: 'Expert (5/5)', value: 5 }
-  ];
+
+  const handleNameChange = (id, newName) => {
+    if (isDuplicateSkill(skills, newName, id)) {
+      addToast(`Skill "${newName.trim()}" is already listed!`, 'error', 2500);
+      return;
+    }
+    updateSkill(id, { name: newName });
+  };
 
   return (
     <div className="space-y-6">
@@ -27,7 +38,7 @@ export function SkillsForm() {
         <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
           Skills ({skills.length})
         </h4>
-        <Button variant="secondary" size="sm" onClick={addSkill} className="text-xs">
+        <Button variant="secondary" size="sm" onClick={() => addSkill()} className="text-xs">
           + Add Skill
         </Button>
       </div>
@@ -48,7 +59,7 @@ export function SkillsForm() {
                   id={`skill-name-${skill.id}`}
                   placeholder="Skill (e.g. React)"
                   value={skill.name || ''}
-                  onChange={(e) => updateSkill(skill.id, { name: e.target.value })}
+                  onChange={(e) => handleNameChange(skill.id, e.target.value)}
                   aria-label="Skill Name"
                   required
                 />
@@ -63,7 +74,7 @@ export function SkillsForm() {
 
                 <Select
                   id={`skill-level-${skill.id}`}
-                  options={levels}
+                  options={SKILL_LEVELS}
                   value={skill.level || 3}
                   onChange={(e) => updateSkill(skill.id, { level: Number(e.target.value) })}
                   aria-label="Proficiency Level"
@@ -110,4 +121,6 @@ export function SkillsForm() {
       )}
     </div>
   );
-}
+});
+
+

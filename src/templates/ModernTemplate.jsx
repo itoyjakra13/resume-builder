@@ -1,50 +1,56 @@
-import React from 'react';
+import React, { memo } from 'react';
 
-export function ModernTemplate({ data, metadata }) {
+// Module-level static size scale maps
+const NAME_SIZE_MAP = {
+  small: 'text-2xl md:text-3xl',
+  medium: 'text-3xl md:text-4xl',
+  large: 'text-4xl md:text-5xl'
+};
+
+const SUBTITLE_SIZE_MAP = {
+  small: 'text-sm',
+  medium: 'text-base',
+  large: 'text-lg'
+};
+
+const SECTION_HEADER_SIZE_MAP = {
+  small: 'text-[10px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+const BODY_BOLD_SIZE_MAP = {
+  small: 'text-xs',
+  medium: 'text-sm',
+  large: 'text-base'
+};
+
+const BODY_SIZE_MAP = {
+  small: 'text-[11px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+const SUB_SIZE_MAP = {
+  small: 'text-[9px]',
+  medium: 'text-[10px]',
+  large: 'text-[11px]'
+};
+
+const sectionHeaderSizeMap = SECTION_HEADER_SIZE_MAP;
+const bodyBoldSizeMap = BODY_BOLD_SIZE_MAP;
+const bodySizeMap = BODY_SIZE_MAP;
+const subSizeMap = SUB_SIZE_MAP;
+
+export const ModernTemplate = memo(function ModernTemplate({ data = {}, metadata = {} }) {
   const { personalInfo = {}, experience = [], education = [], skills = [], projects = [], customSections = [] } = data;
-  const { themeColor, fontSize = 'medium' } = metadata;
-
-  // Dynamic proportional font scaling mappings
-  const nameSizeMap = {
-    small: 'text-2xl md:text-3xl',
-    medium: 'text-3xl md:text-4xl',
-    large: 'text-4xl md:text-5xl'
-  };
-
-  const subtitleSizeMap = {
-    small: 'text-sm',
-    medium: 'text-base',
-    large: 'text-lg'
-  };
-
-  const sectionHeaderSizeMap = {
-    small: 'text-[10px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const bodyBoldSizeMap = {
-    small: 'text-xs',
-    medium: 'text-sm',
-    large: 'text-base'
-  };
-
-  const bodySizeMap = {
-    small: 'text-[11px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const subSizeMap = {
-    small: 'text-[9px]',
-    medium: 'text-[10px]',
-    large: 'text-[11px]'
-  };
+  const { themeColor = '#2563eb', fontSize = 'medium' } = metadata;
 
   return (
-    <div className={`w-full text-slate-800 ${bodySizeMap[fontSize]} leading-relaxed`}>
+    <div className={`w-full text-slate-800 ${BODY_SIZE_MAP[fontSize] || BODY_SIZE_MAP.medium} leading-relaxed`}>
+
       {/* Header Banner */}
-      <header className="border-b-4 pb-4 mb-5 flex flex-col md:flex-row justify-between items-start md:items-end gap-4" style={{ borderColor: themeColor }}>
+      <header className="border-b-4 pb-4 mb-5 flex flex-col md:flex-row print:flex-row justify-between items-start md:items-end print:items-end gap-4" style={{ borderColor: themeColor }}>
         <div className="flex items-center gap-4 text-left">
           {personalInfo.avatar && (
             <img
@@ -54,30 +60,30 @@ export function ModernTemplate({ data, metadata }) {
             />
           )}
           <div>
-            <h1 className={`font-extrabold ${nameSizeMap[fontSize]} tracking-tight text-slate-900 leading-none`}>
+            <h1 className={`font-extrabold ${NAME_SIZE_MAP[fontSize]} tracking-tight text-slate-900 leading-none`}>
               {personalInfo.fullName || 'Your Name'}
             </h1>
-            <p className={`font-medium mt-1.5 ${subtitleSizeMap[fontSize]}`} style={{ color: themeColor }}>
+            <p className={`font-medium mt-1.5 ${SUBTITLE_SIZE_MAP[fontSize]}`} style={{ color: themeColor }}>
               {personalInfo.jobTitle || 'Your Professional Title'}
             </p>
           </div>
         </div>
 
         {/* Contact info grid */}
-        <div className={`space-y-1 self-start md:self-auto text-left md:text-right ${subSizeMap[fontSize]} text-slate-600`}>
-          {personalInfo.email && <div className="flex items-center md:justify-end gap-1.5">
+        <div className={`space-y-1 self-start md:self-auto print:self-auto text-left md:text-right print:text-right ${SUB_SIZE_MAP[fontSize]} text-slate-600`}>
+          {personalInfo.email && <div className="flex items-center md:justify-end print:justify-end gap-1.5">
             <span>{personalInfo.email}</span>
-            <span className="hidden md:inline">•</span>
+            <span className="hidden md:inline print:inline">•</span>
           </div>}
-          {personalInfo.phone && <div className="flex items-center md:justify-end gap-1.5">
+          {personalInfo.phone && <div className="flex items-center md:justify-end print:justify-end gap-1.5">
             <span>{personalInfo.phone}</span>
-            <span className="hidden md:inline">•</span>
+            <span className="hidden md:inline print:inline">•</span>
           </div>}
-          {personalInfo.location && <div className="flex items-center md:justify-end gap-1.5">
+          {personalInfo.location && <div className="flex items-center md:justify-end print:justify-end gap-1.5">
             <span>{personalInfo.location}</span>
-            <span className="hidden md:inline">•</span>
+            <span className="hidden md:inline print:inline">•</span>
           </div>}
-          {personalInfo.website && <div className="flex items-center md:justify-end gap-1.5">
+          {personalInfo.website && <div className="flex items-center md:justify-end print:justify-end gap-1.5">
             <a href={personalInfo.website} target="_blank" rel="noopener noreferrer" className="hover:underline" style={{ color: themeColor }}>
               {personalInfo.website.replace(/https?:\/\/(www\.)?/, '')}
             </a>
@@ -86,35 +92,35 @@ export function ModernTemplate({ data, metadata }) {
       </header>
 
       {/* Two Column Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-6 items-start">
         {/* Left Column (Skills, Info, Education) */}
-        <div className="md:col-span-4 space-y-5">
+        <div className="col-span-4 space-y-5">
           {/* Summary */}
           {personalInfo.summary && (
             <section className="space-y-2">
-              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${sectionHeaderSizeMap[fontSize]}`}>
+              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${SECTION_HEADER_SIZE_MAP[fontSize]}`}>
                 Profile Summary
               </h2>
-              <p className={`text-slate-700 leading-normal ${bodySizeMap[fontSize]}`}>{personalInfo.summary}</p>
+              <p className={`text-slate-700 leading-normal ${BODY_SIZE_MAP[fontSize]}`}>{personalInfo.summary}</p>
             </section>
           )}
 
           {/* Education */}
           {education.length > 0 && (
             <section className="space-y-3">
-              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${sectionHeaderSizeMap[fontSize]}`}>
+              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${SECTION_HEADER_SIZE_MAP[fontSize]}`}>
                 Education
               </h2>
               <div className="space-y-3">
                 {education.map((edu) => (
                   <div key={edu.id} className="print-avoid-break">
-                    <h3 className={`font-bold text-slate-900 ${bodySizeMap[fontSize]}`}>{edu.degree}</h3>
-                    <p className={`font-semibold text-slate-700 ${subSizeMap[fontSize]}`}>{edu.fieldOfStudy}</p>
-                    <p className={`text-slate-500 ${subSizeMap[fontSize]}`}>{edu.institution}</p>
-                    <p className={`text-slate-400 mt-0.5 ${subSizeMap[fontSize]}`}>
+                    <h3 className={`font-bold text-slate-900 ${BODY_SIZE_MAP[fontSize]}`}>{edu.degree}</h3>
+                    <p className={`font-semibold text-slate-700 ${SUB_SIZE_MAP[fontSize]}`}>{edu.fieldOfStudy}</p>
+                    <p className={`text-slate-500 ${SUB_SIZE_MAP[fontSize]}`}>{edu.institution}</p>
+                    <p className={`text-slate-400 mt-0.5 ${SUB_SIZE_MAP[fontSize]}`}>
                       {edu.startDate ? edu.startDate.replace('-', '/') : ''} - {edu.endDate ? edu.endDate.replace('-', '/') : 'Present'}
                     </p>
-                    {edu.grade && <span className={`inline-block mt-0.5 bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded ${subSizeMap[fontSize]}`}>{edu.grade}</span>}
+                    {edu.grade && <span className={`inline-block mt-0.5 bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded ${SUB_SIZE_MAP[fontSize]}`}>{edu.grade}</span>}
                   </div>
                 ))}
               </div>
@@ -124,12 +130,12 @@ export function ModernTemplate({ data, metadata }) {
           {/* Skills */}
           {skills.length > 0 && (
             <section className="space-y-3">
-              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${sectionHeaderSizeMap[fontSize]}`}>
+              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${SECTION_HEADER_SIZE_MAP[fontSize]}`}>
                 Core Expertise
               </h2>
               <div className="flex flex-wrap gap-1.5">
                 {skills.map((skill) => (
-                  <div key={skill.id} className={`bg-slate-50 border border-slate-200 text-slate-800 px-2 py-1 rounded-md font-medium ${subSizeMap[fontSize]}`}>
+                  <div key={skill.id} className={`bg-slate-50 border border-slate-200 text-slate-800 px-2 py-1 rounded-md font-medium ${SUB_SIZE_MAP[fontSize]}`}>
                     {skill.name}
                     {skill.category && <span className="block text-[8px] text-slate-400 font-normal">{skill.category}</span>}
                   </div>
@@ -140,11 +146,11 @@ export function ModernTemplate({ data, metadata }) {
         </div>
 
         {/* Right Column (Experience, Projects, Custom sections) */}
-        <div className="md:col-span-8 space-y-5">
+        <div className="col-span-8 space-y-5">
           {/* Work Experience */}
           {experience.length > 0 && (
             <section className="space-y-3">
-              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${sectionHeaderSizeMap[fontSize]}`} style={{ color: themeColor }}>
+              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${SECTION_HEADER_SIZE_MAP[fontSize]}`} style={{ color: themeColor }}>
                 Professional Experience
               </h2>
               <div className="space-y-4">
@@ -152,15 +158,15 @@ export function ModernTemplate({ data, metadata }) {
                   <div key={exp.id} className="print-avoid-break space-y-1">
                     <div className="flex justify-between items-start gap-2">
                       <div>
-                        <h3 className={`font-bold text-slate-900 ${bodyBoldSizeMap[fontSize]}`}>{exp.role}</h3>
-                        <p className={`font-semibold text-slate-700 ${bodySizeMap[fontSize]}`}>{exp.company} {exp.location ? `• ${exp.location}` : ''}</p>
+                        <h3 className={`font-bold text-slate-900 ${BODY_BOLD_SIZE_MAP[fontSize]}`}>{exp.role}</h3>
+                        <p className={`font-semibold text-slate-700 ${BODY_SIZE_MAP[fontSize]}`}>{exp.company} {exp.location ? `• ${exp.location}` : ''}</p>
                       </div>
-                      <span className={`text-slate-400 font-medium whitespace-nowrap pt-0.5 ${subSizeMap[fontSize]}`}>
+                      <span className={`text-slate-400 font-medium whitespace-nowrap pt-0.5 ${SUB_SIZE_MAP[fontSize]}`}>
                         {exp.startDate ? exp.startDate.replace('-', '/') : ''} - {exp.current ? 'Present' : exp.endDate ? exp.endDate.replace('-', '/') : ''}
                       </span>
                     </div>
                     {exp.description && (
-                      <p className={`text-slate-600 whitespace-pre-line leading-relaxed pl-1 border-l-2 border-slate-100 ${bodySizeMap[fontSize]}`}>
+                      <p className={`text-slate-600 whitespace-pre-line leading-relaxed pl-1 border-l-2 border-slate-100 ${BODY_SIZE_MAP[fontSize]}`}>
                         {exp.description}
                       </p>
                     )}
@@ -173,14 +179,14 @@ export function ModernTemplate({ data, metadata }) {
           {/* Projects */}
           {projects.length > 0 && (
             <section className="space-y-3">
-              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${sectionHeaderSizeMap[fontSize]}`} style={{ color: themeColor }}>
+              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${SECTION_HEADER_SIZE_MAP[fontSize]}`} style={{ color: themeColor }}>
                 Key Projects
               </h2>
               <div className="space-y-3">
                 {projects.map((proj) => (
                   <div key={proj.id} className="print-avoid-break space-y-1">
                     <div className="flex justify-between items-center gap-2">
-                      <h3 className={`font-bold text-slate-900 ${bodyBoldSizeMap[fontSize]}`}>
+                      <h3 className={`font-bold text-slate-900 ${BODY_BOLD_SIZE_MAP[fontSize]}`}>
                         {proj.link ? (
                           <a href={proj.link} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
                             {proj.name}
@@ -191,13 +197,13 @@ export function ModernTemplate({ data, metadata }) {
                         ) : proj.name}
                       </h3>
                       {proj.technologies && proj.technologies.length > 0 && (
-                        <span className={`bg-indigo-50/50 text-indigo-800 border border-indigo-100/50 px-1.5 py-0.5 rounded font-mono ${subSizeMap[fontSize]}`}>
+                        <span className={`bg-indigo-50/50 text-indigo-800 border border-indigo-100/50 px-1.5 py-0.5 rounded font-mono ${SUB_SIZE_MAP[fontSize]}`}>
                           {proj.technologies.join(', ')}
                         </span>
                       )}
                     </div>
                     {proj.description && (
-                      <p className={`text-slate-600 leading-normal ${bodySizeMap[fontSize]}`}>{proj.description}</p>
+                      <p className={`text-slate-600 leading-relaxed whitespace-pre-line pl-1 border-l border-slate-100 ${BODY_SIZE_MAP[fontSize]}`}>{proj.description}</p>
                     )}
                   </div>
                 ))}
@@ -206,23 +212,23 @@ export function ModernTemplate({ data, metadata }) {
           )}
 
           {/* Custom Sections */}
-          {customSections.map((section) => (
-            <section key={section.id} className="space-y-3">
-              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${sectionHeaderSizeMap[fontSize]}`} style={{ color: themeColor }}>
-                {section.sectionTitle}
+          {customSections.map((sec) => (
+            <section key={sec.id} className="space-y-3">
+              <h2 className={`font-extrabold uppercase tracking-wider text-slate-900 border-b pb-1 border-slate-200 ${SECTION_HEADER_SIZE_MAP[fontSize]}`} style={{ color: themeColor }}>
+                {sec.sectionTitle}
               </h2>
               <div className="space-y-3">
-                {section.items.map((item) => (
+                {sec.items.map((item) => (
                   <div key={item.id} className="print-avoid-break space-y-1">
                     <div className="flex justify-between items-start gap-2">
                       <div>
-                        <h3 className={`font-bold text-slate-900 ${bodyBoldSizeMap[fontSize]}`}>{item.title}</h3>
-                        {item.subtitle && <p className={`text-slate-700 font-medium ${bodySizeMap[fontSize]}`}>{item.subtitle}</p>}
+                        <h3 className={`font-bold text-slate-900 ${BODY_BOLD_SIZE_MAP[fontSize]}`}>{item.title}</h3>
+                        {item.subtitle && <p className={`text-slate-700 font-medium ${BODY_SIZE_MAP[fontSize]}`}>{item.subtitle}</p>}
                       </div>
-                      {item.date && <span className={`text-slate-400 font-medium whitespace-nowrap pt-0.5 ${subSizeMap[fontSize]}`}>{item.date}</span>}
+                      {item.date && <span className={`text-slate-400 font-medium whitespace-nowrap pt-0.5 ${SUB_SIZE_MAP[fontSize]}`}>{item.date}</span>}
                     </div>
                     {item.description && (
-                      <p className={`text-slate-600 leading-relaxed whitespace-pre-line pl-1 border-l border-slate-100 ${bodySizeMap[fontSize]}`}>
+                      <p className={`text-slate-600 leading-relaxed whitespace-pre-line pl-1 border-l border-slate-100 ${BODY_SIZE_MAP[fontSize]}`}>
                         {item.description}
                       </p>
                     )}
@@ -235,4 +241,4 @@ export function ModernTemplate({ data, metadata }) {
       </div>
     </div>
   );
-}
+});

@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useResume } from '../../../context/ResumeContext';
 import { Input, Textarea } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
 import { validateDateRange } from '../../../utils/validation';
 
-export function ExperienceForm({ errors, setErrors }) {
+export const ExperienceForm = memo(function ExperienceForm({ errors = {}, setErrors }) {
+
   const {
     resumeData,
     addExperience,
@@ -203,4 +204,5 @@ export function ExperienceForm({ errors, setErrors }) {
       )}
     </div>
   );
-}
+});
+

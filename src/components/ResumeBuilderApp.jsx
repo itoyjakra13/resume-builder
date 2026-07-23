@@ -6,26 +6,44 @@ import { PreviewPanel } from '../features/resume-builder/components/PreviewPanel
 import { TemplateRenderer } from '../templates/TemplateRenderer';
 import { validateEmail, validateUrl, validateDateRange, validateRequired } from '../utils/validation';
 
+const FONT_STYLE_MAP = {
+  serif: 'font-serif',
+  mono: 'font-mono',
+  sans: 'font-sans'
+};
+
+const MARGIN_PADDING_MAP = {
+  ultra: '6mm 8mm',
+  compact: '10mm 12mm',
+  normal: '14mm 16mm',
+  wide: '20mm 22mm'
+};
+
+
 export function ResumeBuilderApp() {
+
   const { resumeData, metadata, toasts, addToast, removeToast } = useResume();
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState('edit'); // 'edit' | 'preview' (responsive controls)
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleValidateAndPrint = () => {
+    if (isExporting) return;
+
     const nextErrors = {};
     const { personalInfo, experience = [], education = [] } = resumeData;
 
     // 1. Personal Info validations
-    const nameErr = validateRequired(personalInfo.fullName, 'Full Name');
+    const nameErr = validateRequired(personalInfo?.fullName, 'Full Name');
     if (nameErr) nextErrors.fullName = nameErr;
 
-    const titleErr = validateRequired(personalInfo.jobTitle, 'Job Title');
+    const titleErr = validateRequired(personalInfo?.jobTitle, 'Job Title');
     if (titleErr) nextErrors.jobTitle = titleErr;
 
-    const emailErr = validateEmail(personalInfo.email);
+    const emailErr = validateEmail(personalInfo?.email);
     if (emailErr) nextErrors.email = emailErr;
 
-    const webErr = validateUrl(personalInfo.website);
+    const webErr = validateUrl(personalInfo?.website);
     if (webErr) nextErrors.website = webErr;
 
     // 2. Relational Date validations (Experience)
@@ -42,7 +60,7 @@ export function ResumeBuilderApp() {
 
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors);
-      addToast('Validation errors found. Check red flags inside form blocks.', 'error', 4000);
+      addToast('Validation errors found. Please review the highlighted fields.', 'error', 4000);
       // Switch view to edit mode on mobile so the user can see errors
       setActiveTab('edit');
       return;
@@ -50,32 +68,37 @@ export function ResumeBuilderApp() {
 
     // Clear errors and run printer
     setErrors({});
-    addToast('Preparing PDF export...', 'success', 2000);
+    setIsExporting(true);
+    addToast('Preparing PDF export...', 'info', 2000);
+
+    // Save current document title and temporarily set title to desired PDF filename
+    const originalTitle = document.title;
+    const rawName = personalInfo?.fullName?.trim() || '';
+    const pdfFilename = rawName ? `${rawName.replace(/\s+/g, '_')}_Resume` : 'Resume';
+
     setTimeout(() => {
-      window.print();
-    }, 300);
+      try {
+        document.title = pdfFilename;
+        window.print();
+        addToast('Export initiated! Select "Save as PDF" in your print dialog.', 'success', 3000);
+      } catch (err) {
+        console.error('Print failed:', err);
+        addToast('Failed to trigger PDF export. Please try again.', 'error', 4000);
+      } finally {
+        document.title = originalTitle;
+        setIsExporting(false);
+      }
+    }, 250);
   };
 
   const totalErrorsCount = Object.keys(errors).length;
-
-  const fontStyleMap = {
-    serif: 'font-serif',
-    mono: 'font-mono',
-    sans: 'font-sans'
-  };
-
-  const marginPaddingMap = {
-    compact: '12mm',
-    normal: '20mm',
-    wide: '28mm'
-  };
 
   return (
     <div className="flex flex-col min-h-screen bg-slate-950 text-slate-100">
       {/* Screen UI Wrapper - Hidden on print */}
       <div className="no-print flex flex-col min-h-screen">
         {/* Header */}
-        <Header onValidateAndPrint={handleValidateAndPrint} />
+        <Header onValidateAndPrint={handleValidateAndPrint} isExporting={isExporting} />
 
         {/* Main Content Layout Grid */}
         <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 max-w-7xl mx-auto w-full p-4 md:p-6 gap-6">
@@ -191,10 +214,10 @@ export function ResumeBuilderApp() {
       </div>
 
       {/* Print-Only Template Renderer - Hidden on screen, visible on print */}
-      <div className="print-only w-full">
+      <div className="print-only w-full min-h-[297mm] flex flex-col">
         <div
-          className={`w-full bg-white text-slate-800 text-left transition-all ${fontStyleMap[metadata.fontFamily] || 'font-sans'}`}
-          style={{ padding: marginPaddingMap[metadata.pageMargins] || '20mm' }}
+          className={`w-full flex-1 flex flex-col bg-white text-slate-800 text-left min-h-[297mm] box-border transition-all ${FONT_STYLE_MAP[metadata.fontFamily] || 'font-sans'} density-${metadata.contentDensity || 'normal'}`}
+          style={{ padding: MARGIN_PADDING_MAP[metadata.pageMargins] || '20mm' }}
         >
           <TemplateRenderer data={resumeData} metadata={metadata} />
         </div>
@@ -202,3 +225,5 @@ export function ResumeBuilderApp() {
     </div>
   );
 }
+
+

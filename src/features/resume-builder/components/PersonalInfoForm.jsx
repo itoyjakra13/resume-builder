@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useResume } from '../../../context/ResumeContext';
 import { Input, Textarea } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
 import { validateEmail, validateUrl } from '../../../utils/validation';
 
-export function PersonalInfoForm({ errors, setErrors }) {
+export const PersonalInfoForm = memo(function PersonalInfoForm({ errors = {}, setErrors }) {
+
   const { resumeData, updatePersonalInfo, addToast } = useResume();
   const { personalInfo } = resumeData;
 
@@ -42,14 +43,21 @@ export function PersonalInfoForm({ errors, setErrors }) {
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      if (!file.type.startsWith('image/')) {
+        addToast('Invalid file format. Please select an image file (PNG, JPG, WebP).', 'error', 3500);
+        return;
+      }
       if (file.size > 1024 * 1024) { // 1MB limit for localStorage
-        addToast('Image must be smaller than 1MB to save locally.', 'error', 3000);
+        addToast('Image size exceeds 1MB limit. Please choose a smaller image file.', 'error', 3500);
         return;
       }
       const reader = new FileReader();
       reader.onloadend = () => {
         updatePersonalInfo('avatar', reader.result);
-        addToast('Profile picture uploaded!', 'success', 2000);
+        addToast('Profile picture uploaded successfully!', 'success', 2000);
+      };
+      reader.onerror = () => {
+        addToast('Failed to read image file. Please try another image.', 'error', 3500);
       };
       reader.readAsDataURL(file);
     }
@@ -59,6 +67,7 @@ export function PersonalInfoForm({ errors, setErrors }) {
     updatePersonalInfo('avatar', '');
     addToast('Profile picture removed.', 'info', 2000);
   };
+
 
   return (
     <div className="space-y-4">
@@ -162,4 +171,5 @@ export function PersonalInfoForm({ errors, setErrors }) {
       />
     </div>
   );
-}
+});
+

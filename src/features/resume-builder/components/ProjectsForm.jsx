@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useResume } from '../../../context/ResumeContext';
 import { Input, Textarea } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
 import { validateUrl } from '../../../utils/validation';
 
-export function ProjectsForm({ errors, setErrors }) {
+export const ProjectsForm = memo(function ProjectsForm({ errors = {}, setErrors }) {
+
   const {
     resumeData,
     addProject,
@@ -157,4 +158,5 @@ export function ProjectsForm({ errors, setErrors }) {
       )}
     </div>
   );
-}
+});
+

@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { useResume } from '../../../context/ResumeContext';
 import { Input, Textarea } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
 
-export function CustomSectionsForm() {
+export const CustomSectionsForm = memo(function CustomSectionsForm() {
+
   const {
     resumeData,
     addCustomSection,
@@ -173,4 +174,5 @@ export function CustomSectionsForm() {
       )}
     </div>
   );
-}
+});
+

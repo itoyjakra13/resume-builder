@@ -1,48 +1,54 @@
-import React from 'react';
+import React, { memo } from 'react';
 
-export function ElegantTemplate({ data, metadata }) {
+const NAME_SIZE_MAP = {
+  small: 'text-xl md:text-2xl',
+  medium: 'text-2xl md:text-3xl',
+  large: 'text-3xl md:text-4xl'
+};
+
+const SUBTITLE_SIZE_MAP = {
+  small: 'text-xs',
+  medium: 'text-sm',
+  large: 'text-base'
+};
+
+const BODY_SIZE_MAP = {
+  small: 'text-[11px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+const SECTION_HEADER_SIZE_MAP = {
+  small: 'text-[10px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+const BODY_BOLD_SIZE_MAP = {
+  small: 'text-xs',
+  medium: 'text-sm',
+  large: 'text-base'
+};
+
+const SUB_SIZE_MAP = {
+  small: 'text-[9px]',
+  medium: 'text-[10px]',
+  large: 'text-[11px]'
+};
+
+const sectionHeaderSizeMap = SECTION_HEADER_SIZE_MAP;
+const bodyBoldSizeMap = BODY_BOLD_SIZE_MAP;
+const bodySizeMap = BODY_SIZE_MAP;
+const subSizeMap = SUB_SIZE_MAP;
+
+
+export const ElegantTemplate = memo(function ElegantTemplate({ data = {}, metadata = {} }) {
   const { personalInfo = {}, experience = [], education = [], skills = [], projects = [], customSections = [] } = data;
-  const { themeColor, fontSize = 'medium' } = metadata;
-
-  // Dynamic proportional font scaling mappings
-  const nameSizeMap = {
-    small: 'text-xl md:text-2xl',
-    medium: 'text-2xl md:text-3xl',
-    large: 'text-3xl md:text-4xl'
-  };
-
-  const subtitleSizeMap = {
-    small: 'text-xs',
-    medium: 'text-sm',
-    large: 'text-base'
-  };
-
-  const sectionHeaderSizeMap = {
-    small: 'text-[10px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const bodyBoldSizeMap = {
-    small: 'text-xs',
-    medium: 'text-sm',
-    large: 'text-base'
-  };
-
-  const bodySizeMap = {
-    small: 'text-[11px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const subSizeMap = {
-    small: 'text-[9px]',
-    medium: 'text-[10px]',
-    large: 'text-[11px]'
-  };
+  const { themeColor = '#d97706', fontSize = 'medium' } = metadata;
 
   return (
-    <div className={`w-full text-slate-800 ${bodySizeMap[fontSize]} leading-relaxed`}>
+    <div className={`w-full text-slate-800 ${BODY_SIZE_MAP[fontSize] || BODY_SIZE_MAP.medium} leading-relaxed`}>
+
       {/* Header Banner - Classical serif layout with center-left name */}
       <header className="border-b pb-4 mb-5 text-left flex items-center gap-4">
         {personalInfo.avatar && (
@@ -53,16 +59,16 @@ export function ElegantTemplate({ data, metadata }) {
           />
         )}
         <div>
-          <h1 className={`italic font-bold ${nameSizeMap[fontSize]} text-slate-900 leading-tight`}>
+          <h1 className={`font-bold ${NAME_SIZE_MAP[fontSize]} tracking-wide text-slate-900`}>
             {personalInfo.fullName || 'Your Name'}
           </h1>
-          <p className={`uppercase tracking-widest text-slate-500 mt-1 ${subtitleSizeMap[fontSize]}`}>
+          <p className={`font-medium italic mt-0.5 ${SUBTITLE_SIZE_MAP[fontSize]}`} style={{ color: themeColor }}>
             {personalInfo.jobTitle || 'Your Professional Title'}
           </p>
         </div>
 
         {/* Flat contact info bar in a row */}
-        <div className={`flex flex-wrap gap-x-4 gap-y-1 text-slate-600 mt-3 ${subSizeMap[fontSize]}`}>
+        <div className={`flex flex-wrap gap-x-4 gap-y-1 text-slate-600 mt-3 ${SUB_SIZE_MAP[fontSize]}`}>
           {personalInfo.email && <span className="flex items-center gap-1">✉ {personalInfo.email}</span>}
           {personalInfo.phone && <span className="flex items-center gap-1">☎ {personalInfo.phone}</span>}
           {personalInfo.location && <span className="flex items-center gap-1">📍 {personalInfo.location}</span>}
@@ -220,4 +226,5 @@ export function ElegantTemplate({ data, metadata }) {
       </div>
     </div>
   );
-}
+});
+

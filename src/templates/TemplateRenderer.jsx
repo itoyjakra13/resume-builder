@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { ModernTemplate } from './ModernTemplate';
 import { MinimalTemplate } from './MinimalTemplate';
 import { ElegantTemplate } from './ElegantTemplate';
@@ -6,7 +6,7 @@ import { CorporateTemplate } from './CorporateTemplate';
 import { CreativeTemplate } from './CreativeTemplate';
 import { CreativeHeaderTemplate } from './CreativeHeaderTemplate';
 
-export function TemplateRenderer({ data, metadata }) {
+export const TemplateRenderer = memo(function TemplateRenderer({ data = {}, metadata = {} }) {
   switch (metadata.templateId) {
     case 'minimal':
       return <MinimalTemplate data={data} metadata={metadata} />;
@@ -22,4 +22,5 @@ export function TemplateRenderer({ data, metadata }) {
     default:
       return <ModernTemplate data={data} metadata={metadata} />;
   }
-}
+});
+

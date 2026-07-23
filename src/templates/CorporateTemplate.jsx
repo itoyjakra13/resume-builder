@@ -1,48 +1,54 @@
-import React from 'react';
+import React, { memo } from 'react';
 
-export function CorporateTemplate({ data, metadata }) {
+const NAME_SIZE_MAP = {
+  small: 'text-xl md:text-2xl',
+  medium: 'text-2xl md:text-3xl',
+  large: 'text-3xl md:text-4xl'
+};
+
+const SUBTITLE_SIZE_MAP = {
+  small: 'text-xs',
+  medium: 'text-sm',
+  large: 'text-base'
+};
+
+const BODY_SIZE_MAP = {
+  small: 'text-[11px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+const SECTION_HEADER_SIZE_MAP = {
+  small: 'text-[10px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+const BODY_BOLD_SIZE_MAP = {
+  small: 'text-xs',
+  medium: 'text-sm',
+  large: 'text-base'
+};
+
+const SUB_SIZE_MAP = {
+  small: 'text-[9px]',
+  medium: 'text-[10px]',
+  large: 'text-[11px]'
+};
+
+const sectionHeaderSizeMap = SECTION_HEADER_SIZE_MAP;
+const bodyBoldSizeMap = BODY_BOLD_SIZE_MAP;
+const bodySizeMap = BODY_SIZE_MAP;
+const subSizeMap = SUB_SIZE_MAP;
+
+
+export const CorporateTemplate = memo(function CorporateTemplate({ data = {}, metadata = {} }) {
   const { personalInfo = {}, experience = [], education = [], skills = [], projects = [], customSections = [] } = data;
-  const { themeColor, fontSize = 'medium' } = metadata;
-
-  // Dynamic proportional font scaling mappings
-  const nameSizeMap = {
-    small: 'text-xl md:text-2xl',
-    medium: 'text-2xl md:text-3xl',
-    large: 'text-3xl md:text-4xl'
-  };
-
-  const subtitleSizeMap = {
-    small: 'text-xs',
-    medium: 'text-sm',
-    large: 'text-base'
-  };
-
-  const sectionHeaderSizeMap = {
-    small: 'text-[10px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const bodyBoldSizeMap = {
-    small: 'text-xs',
-    medium: 'text-sm',
-    large: 'text-base'
-  };
-
-  const bodySizeMap = {
-    small: 'text-[11px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const subSizeMap = {
-    small: 'text-[9px]',
-    medium: 'text-[10px]',
-    large: 'text-[11px]'
-  };
+  const { themeColor = '#334155', fontSize = 'medium' } = metadata;
 
   return (
-    <div className={`w-full text-slate-800 ${bodySizeMap[fontSize]} leading-relaxed`}>
+    <div className={`w-full text-slate-800 ${BODY_SIZE_MAP[fontSize] || BODY_SIZE_MAP.medium} leading-relaxed`}>
+
       {/* Header - Centered Corporate Style */}
       <header className="text-center pb-6 border-b-2 border-slate-200 mb-6 flex flex-col items-center">
         {personalInfo.avatar && (
@@ -52,15 +58,15 @@ export function CorporateTemplate({ data, metadata }) {
             className="w-16 h-16 rounded-xl object-cover border border-slate-200/60 shadow-sm mb-3"
           />
         )}
-        <h1 className={`font-extrabold tracking-wide text-slate-900 uppercase ${nameSizeMap[fontSize]}`}>
+        <h1 className={`font-bold ${NAME_SIZE_MAP[fontSize]} tracking-wide text-slate-900 uppercase`}>
           {personalInfo.fullName || 'Your Name'}
         </h1>
-        <p className={`font-bold tracking-widest uppercase mt-1.5 ${subtitleSizeMap[fontSize]}`} style={{ color: themeColor }}>
+        <p className={`font-semibold tracking-wider uppercase mt-1 ${SUBTITLE_SIZE_MAP[fontSize]}`} style={{ color: themeColor }}>
           {personalInfo.jobTitle || 'Your Professional Title'}
         </p>
 
-        {/* Contact info grid */}
-        <div className={`flex flex-wrap justify-center gap-x-5 gap-y-1 text-slate-600 mt-4 max-w-3xl mx-auto ${subSizeMap[fontSize]}`}>
+        {/* Contact Strip */}
+        <div className={`flex flex-wrap justify-center gap-x-4 gap-y-1 text-slate-600 mt-3 font-medium ${SUB_SIZE_MAP[fontSize]}`}>
           {personalInfo.email && (
             <span className="flex items-center gap-1.5">
               <span style={{ color: themeColor }}>■</span> {personalInfo.email}
@@ -243,4 +249,5 @@ export function CorporateTemplate({ data, metadata }) {
       </div>
     </div>
   );
-}
+});
+

@@ -1,70 +1,84 @@
-import React from 'react';
+import React, { memo } from 'react';
 
-export function CreativeHeaderTemplate({ data, metadata }) {
+const NAME_SIZE_MAP = {
+  small: 'text-2xl md:text-3xl',
+  medium: 'text-3xl md:text-4xl',
+  large: 'text-4xl md:text-5xl'
+};
+
+const SUBTITLE_SIZE_MAP = {
+  small: 'text-sm',
+  medium: 'text-base',
+  large: 'text-lg'
+};
+
+const SECTION_HEADER_SIZE_MAP = {
+  small: 'text-[10px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+const BODY_SIZE_MAP = {
+  small: 'text-[11px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+const BODY_BOLD_SIZE_MAP = {
+  small: 'text-xs',
+  medium: 'text-sm',
+  large: 'text-base'
+};
+
+const SUB_SIZE_MAP = {
+  small: 'text-[9px]',
+  medium: 'text-[10px]',
+  large: 'text-[11px]'
+};
+
+const NEGATIVE_MARGIN_HEADER_MAP = {
+  ultra: '-mx-[8mm] -mt-[6mm]',
+  compact: '-mx-[12mm] -mt-[10mm]',
+  normal: '-mx-[16mm] -mt-[14mm]',
+  wide: '-mx-[22mm] -mt-[20mm]'
+};
+
+const sectionHeaderSizeMap = SECTION_HEADER_SIZE_MAP;
+const bodyBoldSizeMap = BODY_BOLD_SIZE_MAP;
+const bodySizeMap = BODY_SIZE_MAP;
+const subSizeMap = SUB_SIZE_MAP;
+
+
+export const CreativeHeaderTemplate = memo(function CreativeHeaderTemplate({ data = {}, metadata = {} }) {
   const { personalInfo = {}, experience = [], education = [], skills = [], projects = [], customSections = [] } = data;
-  const { themeColor, fontSize = 'medium' } = metadata;
-
-  // Dynamic proportional font scaling mappings
-  const nameSizeMap = {
-    small: 'text-2xl md:text-3xl',
-    medium: 'text-3xl md:text-4xl',
-    large: 'text-4xl md:text-5xl'
-  };
-
-  const subtitleSizeMap = {
-    small: 'text-sm',
-    medium: 'text-base',
-    large: 'text-lg'
-  };
-
-  const sectionHeaderSizeMap = {
-    small: 'text-[10px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const bodyBoldSizeMap = {
-    small: 'text-xs',
-    medium: 'text-sm',
-    large: 'text-base'
-  };
-
-  const bodySizeMap = {
-    small: 'text-[11px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const subSizeMap = {
-    small: 'text-[9px]',
-    medium: 'text-[10px]',
-    large: 'text-[11px]'
-  };
+  const { themeColor = '#4f46e5', fontSize = 'medium', pageMargins = 'normal' } = metadata;
+  const headerMarginClass = NEGATIVE_MARGIN_HEADER_MAP[pageMargins] || NEGATIVE_MARGIN_HEADER_MAP.normal;
 
   return (
-    <div className={`w-full text-slate-800 ${bodySizeMap[fontSize]} leading-relaxed`}>
+    <div className={`w-full text-slate-800 ${BODY_SIZE_MAP[fontSize] || BODY_SIZE_MAP.medium} leading-relaxed`}>
+
       {/* Creative Header layout: Top banner spans full page with solid background */}
-      <div className="-mx-[20mm] -mt-[20mm] mb-6 p-6 text-white text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-4" style={{ backgroundColor: themeColor }}>
-        <div className="flex flex-col md:flex-row items-center gap-4">
+      <div className={`${headerMarginClass} mb-6 p-6 text-white text-left flex flex-row justify-between items-center gap-4`} style={{ backgroundColor: themeColor }}>
+        <div className="flex flex-row items-center gap-4">
           {personalInfo.avatar && (
             <img
               src={personalInfo.avatar}
               alt={personalInfo.fullName || 'Profile avatar'}
-              className="w-16 h-16 rounded-full object-cover border-2 border-white/40 shadow-sm"
+              className="w-16 h-16 rounded-full object-cover border-2 border-white/40 shadow-sm flex-shrink-0"
             />
           )}
           <div>
-            <h1 className={`font-extrabold tracking-tight leading-none ${nameSizeMap[fontSize]}`}>
+            <h1 className={`font-extrabold ${NAME_SIZE_MAP[fontSize]} tracking-tight leading-none`}>
               {personalInfo.fullName || 'Your Name'}
             </h1>
-            <p className={`font-medium opacity-90 mt-1 ${subtitleSizeMap[fontSize]}`}>
+            <p className={`font-medium opacity-90 ${SUBTITLE_SIZE_MAP[fontSize]}`}>
               {personalInfo.jobTitle || 'Your Professional Title'}
             </p>
           </div>
         </div>
 
         {/* Contact info grid inside header banner */}
-        <div className={`flex flex-col md:items-end gap-1.5 opacity-90 ${subSizeMap[fontSize]} text-slate-100`}>
+        <div className={`flex flex-col items-end gap-1.5 opacity-90 ${subSizeMap[fontSize]} text-slate-100`}>
           {personalInfo.email && <span>✉ {personalInfo.email}</span>}
           {personalInfo.phone && <span>☎ {personalInfo.phone}</span>}
           {personalInfo.location && <span>📍 {personalInfo.location}</span>}
@@ -77,9 +91,9 @@ export function CreativeHeaderTemplate({ data, metadata }) {
       </div>
 
       {/* Main content - Two Columns */}
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+      <div className="grid grid-cols-12 gap-6 items-start">
         {/* Left column (Experience, Projects) */}
-        <div className="md:col-span-8 space-y-5">
+        <div className="col-span-8 space-y-5">
           {/* Summary */}
           {personalInfo.summary && (
             <section className="space-y-2">
@@ -155,7 +169,7 @@ export function CreativeHeaderTemplate({ data, metadata }) {
         </div>
 
         {/* Right column (Skills, Education, Custom) */}
-        <div className="md:col-span-4 space-y-5">
+        <div className="col-span-4 space-y-5">
           {/* Skills */}
           {skills.length > 0 && (
             <section className="space-y-3">
@@ -219,4 +233,5 @@ export function CreativeHeaderTemplate({ data, metadata }) {
       </div>
     </div>
   );
-}
+});
+

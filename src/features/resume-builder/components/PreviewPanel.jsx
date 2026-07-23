@@ -1,9 +1,23 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, memo } from 'react';
 import { useResume } from '../../../context/ResumeContext';
 import { TemplateRenderer } from '../../../templates/TemplateRenderer';
 import { Select } from '../../../components/Input/Input';
 
-export function PreviewPanel() {
+const FONT_STYLE_MAP = {
+  serif: 'font-serif',
+  mono: 'font-mono',
+  sans: 'font-sans'
+};
+
+const MARGIN_PADDING_MAP = {
+  ultra: '6mm 8mm',
+  compact: '10mm 12mm',
+  normal: '14mm 16mm',
+  wide: '20mm 22mm'
+};
+
+export const PreviewPanel = memo(function PreviewPanel() {
+
   const { resumeData, metadata, updateMetadata, setMetadata, addToast } = useResume();
   const [zoom, setZoom] = useState(1); // Scale multiplier
   const [showControls, setShowControls] = useState(true);
@@ -21,10 +35,12 @@ export function PreviewPanel() {
   ];
 
   const marginOptions = [
-    { label: 'Compact Margins', value: 'compact' },
-    { label: 'Normal Margins', value: 'normal' },
-    { label: 'Wide Margins', value: 'wide' }
+    { label: 'Ultra Compact (6mm)', value: 'ultra' },
+    { label: 'Compact (10mm)', value: 'compact' },
+    { label: 'Normal (14mm)', value: 'normal' },
+    { label: 'Wide (20mm)', value: 'wide' }
   ];
+
 
   const densityOptions = [
     { label: 'Compact Spacing', value: 'compact' },
@@ -202,23 +218,8 @@ export function PreviewPanel() {
     }
   };
 
-  // Exact physical A4 padding values mapped in millimeters for high-fidelity rendering/printing
-  const marginPaddingMap = {
-    compact: '12mm',
-    normal: '20mm',
-    wide: '28mm'
-  };
-
-  const getFontFamilyClass = (font) => {
-    switch (font) {
-      case 'serif': return 'font-serif';
-      case 'mono': return 'font-mono';
-      case 'sans':
-      default: return 'font-sans';
-    }
-  };
-
   // Helper to render dynamic miniature blueprint layout boxes as small visual previews
+
   const renderMiniBlueprint = (templateId, color) => {
     switch (templateId) {
       case 'creative':
@@ -466,25 +467,27 @@ export function PreviewPanel() {
       </div>
 
       {/* Paper View Container */}
-      <div className="flex-1 overflow-auto p-4 md:p-8 bg-slate-950 flex justify-center items-start scroll-smooth">
+      <div className="flex-1 overflow-auto p-4 md:p-8 bg-slate-950 flex justify-center items-start scroll-smooth relative">
         <div
-          className="print-container transition-transform duration-200 ease-out"
+          className="print-container transition-transform duration-200 ease-out py-2"
           style={{
             transform: `scale(${zoom})`,
             transformOrigin: 'top center',
             width: '100%',
-            maxWidth: '210mm', // standard A4 width
+            maxWidth: '210mm', // Standard physical A4 width
           }}
         >
-          {/* Simulated A4 Page */}
+          {/* Simulated A4 Sheet */}
           <div
-            className={`w-full bg-white text-slate-800 shadow-2xl border border-slate-300 min-h-[297mm] text-left transition-all ${getFontFamilyClass(metadata.fontFamily)} density-${metadata.contentDensity || 'normal'}`}
-            style={{ padding: marginPaddingMap[metadata.pageMargins] || '20mm' }}
+            key={metadata.templateId}
+            className={`w-full bg-white text-slate-800 shadow-[0_20px_50px_rgba(0,0,0,0.6)] border border-slate-200/80 min-h-[297mm] flex flex-col text-left transition-all duration-200 ease-out animate-fade-in ${FONT_STYLE_MAP[metadata.fontFamily] || 'font-sans'} density-${metadata.contentDensity || 'normal'}`}
+            style={{ padding: MARGIN_PADDING_MAP[metadata.pageMargins] || '20mm' }}
           >
             <TemplateRenderer data={resumeData} metadata={metadata} />
           </div>
+
         </div>
       </div>
     </section>
   );
-}
+});

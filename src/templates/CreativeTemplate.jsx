@@ -1,52 +1,67 @@
-import React from 'react';
+import React, { memo } from 'react';
 
-export function CreativeTemplate({ data, metadata }) {
+const NAME_SIZE_MAP = {
+  small: 'text-xl',
+  medium: 'text-2xl',
+  large: 'text-3xl'
+};
+
+const SUBTITLE_SIZE_MAP = {
+  small: 'text-xs',
+  medium: 'text-sm',
+  large: 'text-base'
+};
+
+const SECTION_HEADER_SIZE_MAP = {
+  small: 'text-[10px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+const BODY_SIZE_MAP = {
+  small: 'text-[11px]',
+  medium: 'text-xs',
+  large: 'text-sm'
+};
+
+
+const BODY_BOLD_SIZE_MAP = {
+  small: 'text-xs',
+  medium: 'text-sm',
+  large: 'text-base'
+};
+
+const SUB_SIZE_MAP = {
+  small: 'text-[9px]',
+  medium: 'text-[10px]',
+  large: 'text-[11px]'
+};
+
+const NEGATIVE_MARGIN_MAP = {
+  ultra: '-mx-[8mm] -my-[6mm]',
+  compact: '-mx-[12mm] -my-[10mm]',
+  normal: '-mx-[16mm] -my-[14mm]',
+  wide: '-mx-[22mm] -my-[20mm]'
+};
+
+const sectionHeaderSizeMap = SECTION_HEADER_SIZE_MAP;
+const bodyBoldSizeMap = BODY_BOLD_SIZE_MAP;
+const bodySizeMap = BODY_SIZE_MAP;
+const subSizeMap = SUB_SIZE_MAP;
+
+
+export const CreativeTemplate = memo(function CreativeTemplate({ data = {}, metadata = {} }) {
   const { personalInfo = {}, experience = [], education = [], skills = [], projects = [], customSections = [] } = data;
-  const { themeColor, fontSize = 'medium' } = metadata;
-
-  // Dynamic proportional font scaling mappings
-  const nameSizeMap = {
-    small: 'text-xl',
-    medium: 'text-2xl',
-    large: 'text-3xl'
-  };
-
-  const subtitleSizeMap = {
-    small: 'text-xs',
-    medium: 'text-sm',
-    large: 'text-base'
-  };
-
-  const sectionHeaderSizeMap = {
-    small: 'text-[10px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const bodyBoldSizeMap = {
-    small: 'text-xs',
-    medium: 'text-sm',
-    large: 'text-base'
-  };
-
-  const bodySizeMap = {
-    small: 'text-[11px]',
-    medium: 'text-xs',
-    large: 'text-sm'
-  };
-
-  const subSizeMap = {
-    small: 'text-[9px]',
-    medium: 'text-[10px]',
-    large: 'text-[11px]'
-  };
+  const { themeColor = '#059669', fontSize = 'medium', pageMargins = 'normal' } = metadata;
+  const marginClass = NEGATIVE_MARGIN_MAP[pageMargins] || NEGATIVE_MARGIN_MAP.normal;
 
   return (
-    <div className={`w-full text-slate-800 ${bodySizeMap[fontSize]} leading-relaxed`}>
+    <div className={`w-full flex-1 flex flex-col text-slate-800 ${BODY_SIZE_MAP[fontSize] || BODY_SIZE_MAP.medium} leading-relaxed`}>
+
       {/* Creative Split layout: We simulate a split grid. On print, it displays as a nice double column */}
-      <div className="grid grid-cols-12 -mx-[20mm] -my-[20mm] min-h-[297mm]">
+      <div className={`grid grid-cols-12 ${marginClass} flex-1 items-stretch`}>
         {/* Sidebar (Theme colored left sidebar) */}
-        <aside className="col-span-4 p-6 text-white space-y-6 flex flex-col justify-between" style={{ backgroundColor: themeColor }}>
+        <aside className="col-span-4 p-5 text-white space-y-6 flex flex-col justify-between" style={{ backgroundColor: themeColor }}>
           <div className="space-y-6">
             {/* Header info */}
             <div className="text-center md:text-left space-y-2">
@@ -59,17 +74,17 @@ export function CreativeTemplate({ data, metadata }) {
                   />
                 </div>
               )}
-              <h1 className={`font-extrabold tracking-tight leading-tight ${nameSizeMap[fontSize]}`}>
+              <h1 className={`font-extrabold ${NAME_SIZE_MAP[fontSize]} tracking-tight leading-none text-white`}>
                 {personalInfo.fullName || 'Your Name'}
               </h1>
-              <p className={`font-medium opacity-90 leading-snug ${subtitleSizeMap[fontSize]}`}>
+              <p className={`font-medium opacity-90 ${SUBTITLE_SIZE_MAP[fontSize]}`}>
                 {personalInfo.jobTitle || 'Your Professional Title'}
               </p>
             </div>
 
             {/* Contact details */}
             <div className="space-y-3 pt-4 border-t border-white/20">
-              <h2 className={`font-extrabold uppercase tracking-wider text-white/90 ${sectionHeaderSizeMap[fontSize]}`}>
+              <h2 className={`font-extrabold uppercase tracking-wider text-white/90 ${SECTION_HEADER_SIZE_MAP[fontSize]}`}>
                 Contact Details
               </h2>
               <div className={`space-y-2 opacity-90 ${subSizeMap[fontSize]} break-all`}>
@@ -125,7 +140,7 @@ export function CreativeTemplate({ data, metadata }) {
         </aside>
 
         {/* Main Body content */}
-        <main className="col-span-8 p-6 bg-white space-y-5">
+        <main className="col-span-8 p-5 bg-white space-y-5">
           {/* Profile Summary */}
           {personalInfo.summary && (
             <section className="space-y-2">
@@ -252,4 +267,5 @@ export function CreativeTemplate({ data, metadata }) {
       </div>
     </div>
   );
-}
+});
+

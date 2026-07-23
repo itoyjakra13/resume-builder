@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { useResume } from '../../../context/ResumeContext';
 import { Input } from '../../../components/Input/Input';
 import { Button } from '../../../components/Button/Button';
 import { validateDateRange } from '../../../utils/validation';
 
-export function EducationForm({ errors, setErrors }) {
+export const EducationForm = memo(function EducationForm({ errors = {}, setErrors }) {
+
   const {
     resumeData,
     addEducation,
@@ -183,4 +184,5 @@ export function EducationForm({ errors, setErrors }) {
       )}
     </div>
   );
-}
+});
+

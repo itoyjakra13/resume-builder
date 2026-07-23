@@ -80,7 +80,7 @@
   }
   
   /* Reset outer viewport styles so there are no page breaks, dark blocks or scroll limits */
-  html, body, #root {
+  html, body, #root, #root > div {
     background: #ffffff !important;
     background-color: #ffffff !important;
     color: #000000 !important;
@@ -95,21 +95,63 @@
 
   /* Show the printable page */
   .print-only {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
+    min-height: 297mm !important;
     background: #ffffff !important;
     color: #000000 !important;
+  }
+
+  .print-only > div {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 0% !important;
+    min-height: 297mm !important;
   }
 
   /* Force page margins in physical millimeters */
   @page {
     size: A4;
-    margin: 15mm 15mm 15mm 15mm;
+    margin: 0;
   }
-  
-  /* Prevent content clipping or splitting mid-sentence */
+
+  /* Allow main page content & containers to fragment naturally without forcing breaks */
+  .print-only .grid,
+  .print-only .flex {
+    break-inside: auto !important;
+    page-break-inside: auto !important;
+  }
+
+  /* Force multi-column layout preservation in print mode */
+  .print-only .grid-cols-12,
+  .print-only [class*="md:grid-cols-12"] {
+    display: grid !important;
+    grid-template-columns: repeat(12, minmax(0, 1fr)) !important;
+  }
+
+  .print-only .col-span-4,
+  .print-only [class*="md:col-span-4"] {
+    grid-column: span 4 / span 4 !important;
+  }
+
+  .print-only .col-span-8,
+  .print-only [class*="md:col-span-8"] {
+    grid-column: span 8 / span 8 !important;
+  }
+
+  /* Prevent headings from breaking orphaned at page bottom */
+  .print-only h1,
+  .print-only h2,
+  .print-only h3 {
+    break-after: avoid !important;
+    page-break-after: avoid !important;
+  }
+
+  /* Prevent individual entry items from breaking mid-content */
   .print-avoid-break {
     page-break-inside: avoid !important;
     break-inside: avoid !important;
+    display: block !important;
   }
 
   /* Force graphics/colors to print exactly */
@@ -166,18 +208,6 @@
 .density-compact .gap-4 {
   gap: 0.5rem !important;
 }
-/* Creative template specific sidebar adjust */
-.density-compact .-mx-\[20mm\] {
-  margin-left: -12mm !important;
-  margin-right: -12mm !important;
-}
-.density-compact .-my-\[20mm\] {
-  margin-top: -12mm !important;
-  margin-bottom: -12mm !important;
-}
-.density-compact .-mt-\[20mm\] {
-  margin-top: -12mm !important;
-}
 
 /* 2. Spacious Density */
 .density-relaxed {
@@ -209,4 +239,18 @@
   gap: 2rem !important;
 }
 
+/* Fade in micro-animation (<= 200ms) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
+.animate-fade-in {
+  animation: fadeIn 180ms ease-out forwards;
+}
